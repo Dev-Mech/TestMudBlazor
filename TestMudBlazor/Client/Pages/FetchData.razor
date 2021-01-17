@@ -2,6 +2,7 @@
 @using TestMudBlazor.Shared
 @inject HttpClient Http
 
+
 <h1>Weather forecast</h1>
 
 <p>This component demonstrates fetching data from the server.</p>
@@ -12,6 +13,33 @@
 }
 else
 {
+    <MudTable Items="@forecasts" Filter="new Func<WeatherForecast,bool>(FilterFunc)">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Weather Example</MudText>
+            <MudToolBarSpacer />
+            <MudTextField @bind-Value="searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh>Date</MudTh>
+            <MudTh>Temp. (C)</MudTh>
+            <MudTh>Temp. (F)</MudTh>
+            <MudTh>Summary</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="Date">@context.Date</MudTd>
+            <MudTd DataLabel="Temp. (C)">@context.TemperatureC</MudTd>
+            <MudTd DataLabel="Temp. (F)">@context.TemperatureF</MudTd>
+            <MudTd DataLabel="Summary">@context.Summary</MudTd>
+        </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+
+
     <table class="table">
         <thead>
             <tr>
@@ -37,10 +65,22 @@ else
 
 @code {
     private WeatherForecast[] forecasts;
+    private string searchString = "";
 
     protected override async Task OnInitializedAsync()
     {
         forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast");
+    }
+
+    private bool FilterFunc(WeatherForecast _forcast)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (_forcast.Summary.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if ($"{_forcast.Date} {_forcast.TemperatureC} {_forcast.TemperatureF}".Contains(searchString))
+            return true;
+        return false;
     }
 
 }
